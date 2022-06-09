@@ -17,7 +17,7 @@ public record WeatherResponse(DateTime Date, double TempC, double TempF);
 
 ## Step 3
 Create a folder named Mediators  
-Add classes for QueryMediators and CommandQueryMediators, they should implement the interface IRequestHandler for each request type returning its responsetype:  
+Add classes (or a single class, think "Single Responsibility", the requesthandlers should have the same responsibility area) for your QueryMediators and CommandQueryMediators, they should implement the interface IRequestHandler for each request type returning its responsetype:  
 
 ```
 public class QueryMediators :
