@@ -2,9 +2,9 @@
 Add a reference to 'MediatR.Extensions.Microsoft.DependencyInjection'  
 ## Step 2  
 Create a folder named Contracts  
-Add records for request data types
-Add records for response data types
-Connect request data type to response data type by adding the interface IRequest of response datatype  
+Add records for request data types  
+Add records for response data types  
+Connect request data type to response data type by adding the interface IRequest of response datatype:  
 
 ```
 public record ReadAllWeatherRequest() : IRequest<IEnumerable<WeatherResponse>>;
