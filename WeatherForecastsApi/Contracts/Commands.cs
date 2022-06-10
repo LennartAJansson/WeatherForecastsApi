@@ -1,4 +1,4 @@
-﻿namespace WebApplication1.Contracts
+﻿namespace WeatherForecastsApi.Contracts
 {
     using MediatR;
 

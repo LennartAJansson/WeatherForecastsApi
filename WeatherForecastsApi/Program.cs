@@ -2,13 +2,16 @@ using MediatR;
 
 using System.Reflection;
 
-using WebApplication1.Controllers;
+using WeatherForecastsApi.Controllers;
+using WeatherForecastsApi.Extensions;
 
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddMediatR(Assembly.GetAssembly(typeof(WeatherForecastController))
     ?? throw new ArgumentNullException("Couldn't find assembly"));
+
+builder.Services.AddWeatherForecastsDb(builder.Configuration.GetConnectionString("WeatherForecastsDb"));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

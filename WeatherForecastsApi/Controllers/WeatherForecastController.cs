@@ -1,10 +1,10 @@
-namespace WebApplication1.Controllers
+namespace WeatherForecastsApi.Controllers
 {
     using MediatR;
 
     using Microsoft.AspNetCore.Mvc;
 
-    using WebApplication1.Contracts;
+    using WeatherForecastsApi.Contracts;
 
     [ApiController]
     [Route("[controller]/[action]")]
