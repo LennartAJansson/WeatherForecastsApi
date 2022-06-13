@@ -9,11 +9,11 @@
     {
         public static IServiceCollection AddWeatherForecastsDb(this IServiceCollection services, string connectionString)
         {
-            return services
-                .AddTransient<IWeatherForecastsService, WeatherForecastsService>()
-                .AddDbContext<WeatherForecastsDbContext>(options => options
-                    .UseSqlServer(connectionString),
-                        ServiceLifetime.Transient, ServiceLifetime.Transient);
+            services.AddScoped<IWeatherForecastsService, WeatherForecastsService>();
+            services.AddDbContext<IWeatherForecastsDbContext, WeatherForecastsDbContext>(options => options
+                    .UseSqlServer(connectionString), ServiceLifetime.Transient, ServiceLifetime.Transient);
+
+            return services;
         }
     }
 }
