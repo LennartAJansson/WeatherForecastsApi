@@ -12,7 +12,7 @@
         private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         protected ILogger<WeatherForecastsDbContext> logger = loggerFactory.CreateLogger<WeatherForecastsDbContext>();
 
-        public DbSet<WeatherForecast> WeatherForecasts { get; set; }
+        public DbSet<WeatherForecast>? WeatherForecasts { get; set; }
 
         public WeatherForecastsDbContext(DbContextOptions<WeatherForecastsDbContext> options)
             : base(options)
@@ -37,13 +37,13 @@
                 logger?.LogInformation("Migrations are up to date");
             }
 
-            if (!WeatherForecasts.Any())
+            if (WeatherForecasts != null && !WeatherForecasts.Any())
             {
-                if (seedFileName != null)
+                if (seedFileName != null && File.Exists(seedFileName))
                 {
-                    if (File.Exists(seedFileName))
+                    IEnumerable<WeatherForecast>? forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
+                    if (forecasts != null && forecasts.Any())
                     {
-                        IEnumerable<WeatherForecast> forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
                         logger?.LogInformation("Adding {count} seeded data", forecasts.Count());
                         await WeatherForecasts.AddRangeAsync(forecasts);
                         await SaveChangesAsync();

@@ -6,7 +6,7 @@
 
     public interface IWeatherForecastsDbContext
     {
-        DbSet<WeatherForecast> WeatherForecasts { get; set; }
+        DbSet<WeatherForecast>? WeatherForecasts { get; set; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken));
         Task EnsureExists(string? seedFileName = null);
     }

@@ -11,7 +11,7 @@
 
     //It would be possible to simply combine CommandMediators.cs and QueryMediators.cs into a single class
     public class QueryMediators :
-        IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>>,
+        IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>?>,
         IRequestHandler<ReadSingleWeatherRequest, WeatherResponse?>
     {
         private readonly ILogger<QueryMediators> logger;
@@ -23,10 +23,15 @@
             this.service = service;
         }
 
-        public async Task<IEnumerable<WeatherResponse>> Handle(ReadAllWeatherRequest request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<WeatherResponse>?> Handle(ReadAllWeatherRequest request, CancellationToken cancellationToken)
         {
             //Add functionality to Read All Weather Requests
             IEnumerable<WeatherForecast>? result = await service.ReadAllWeatherForecasts();
+
+            if (result == null)
+            {
+                return null;
+            }
 
             return result.Select(r => new WeatherResponse(r.Id, r.Date, r.TemperatureC, r.TemperatureF, r.Summary));
         }

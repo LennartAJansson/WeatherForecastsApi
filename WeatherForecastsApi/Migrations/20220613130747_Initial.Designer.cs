@@ -12,8 +12,8 @@ using WeatherForecastsApi.Db;
 namespace WeatherForecastsApi.Migrations
 {
     [DbContext(typeof(WeatherForecastsDbContext))]
-    [Migration("20220613114732_FloatTemp")]
-    partial class FloatTemp
+    [Migration("20220613130747_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

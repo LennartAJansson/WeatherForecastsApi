@@ -18,15 +18,16 @@
             this.context = context;
         }
 
-        public Task<IEnumerable<WeatherForecast>> ReadAllWeatherForecasts()
+        public Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts()
         {
-            return Task.FromResult(context.WeatherForecasts.AsEnumerable());
+            IEnumerable<WeatherForecast>? result = context.WeatherForecasts?.AsEnumerable();
+            return Task.FromResult(result);
         }
 
         public Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date)
         {
             //Returns forecast for the same hour. Minutes and seconds will be ignored
-            WeatherForecast? result = context.WeatherForecasts
+            WeatherForecast? result = context.WeatherForecasts?
                 .Where(w => w.Date.Year == date.Year && w.Date.Month == date.Month && w.Date.Day == date.Day && w.Date.Hour == date.Hour)
                 .FirstOrDefault();
 
@@ -40,7 +41,7 @@
                 return null;
             }
 
-            context.WeatherForecasts.Add(forecast);
+            context.WeatherForecasts?.Add(forecast);
 
             await context.SaveChangesAsync();
 
@@ -49,7 +50,7 @@
 
         public async Task<WeatherForecast?> UpdateWeatherForecast(WeatherForecast forecast)
         {
-            WeatherForecast? weatherForecast = context.WeatherForecasts.Find(forecast.Id);
+            WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
             if (weatherForecast == null)
             {
                 return null;
@@ -68,13 +69,13 @@
 
         public async Task<WeatherForecast?> DeleteWeatherForecast(WeatherForecast forecast)
         {
-            WeatherForecast? weatherForecast = context.WeatherForecasts.Find(forecast.Id);
+            WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
             if (weatherForecast == null)
             {
                 return null;
             }
 
-            context.WeatherForecasts.Remove(weatherForecast);
+            context.WeatherForecasts?.Remove(weatherForecast);
 
             await context.SaveChangesAsync();
 

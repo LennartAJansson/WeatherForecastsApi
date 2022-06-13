@@ -4,7 +4,7 @@
 
     public interface IWeatherForecastsService
     {
-        Task<IEnumerable<WeatherForecast>> ReadAllWeatherForecasts();
+        Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts();
         Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date);
         Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast);
         Task<WeatherForecast?> UpdateWeatherForecast(WeatherForecast forecast);

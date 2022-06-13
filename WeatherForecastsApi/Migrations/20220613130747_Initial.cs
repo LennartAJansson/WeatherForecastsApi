@@ -16,7 +16,7 @@ namespace WeatherForecastsApi.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TemperatureC = table.Column<int>(type: "int", nullable: false),
+                    TemperatureC = table.Column<double>(type: "float", nullable: false),
                     Summary = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
