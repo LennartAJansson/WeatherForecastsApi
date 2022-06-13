@@ -31,22 +31,24 @@
             {
                 logger?.LogInformation("Adding {count} migrations", migrations.Count());
                 await Database.MigrateAsync();
+            }
+            else
+            {
+                logger?.LogInformation("Migrations are up to date");
+            }
 
-
+            if (!WeatherForecasts.Any())
+            {
                 if (seedFileName != null)
                 {
                     if (File.Exists(seedFileName))
                     {
                         IEnumerable<WeatherForecast> forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
+                        logger?.LogInformation("Adding {count} seeded data", forecasts.Count());
                         await WeatherForecasts.AddRangeAsync(forecasts);
                         await SaveChangesAsync();
                     }
-                    //Read file and seed data from the file
                 }
-            }
-            else
-            {
-                logger?.LogInformation("Migrations are up to date");
             }
         }
     }
