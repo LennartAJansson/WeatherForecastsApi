@@ -15,5 +15,12 @@
 
             return services;
         }
+
+        public static WebApplication UpdateDatabase(this WebApplication application, string seedFileName)
+        {
+            IWeatherForecastsDbContext ctx = application.Services.GetRequiredService<IWeatherForecastsDbContext>();
+            ctx.EnsureExists(seedFileName);
+            return application;
+        }
     }
 }

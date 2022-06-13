@@ -11,9 +11,9 @@
 
     //It would be possible to simply combine CommandMediators.cs and QueryMediators.cs into a single class
     public class CommandMediators :
-        IRequestHandler<CreateWeatherForecast, WeatherResponse>,
-        IRequestHandler<UpdateWeatherForecast, WeatherResponse>,
-        IRequestHandler<DeleteWeatherForecast, WeatherResponse>
+        IRequestHandler<CreateWeatherForecast, WeatherResponse?>,
+        IRequestHandler<UpdateWeatherForecast, WeatherResponse?>,
+        IRequestHandler<DeleteWeatherForecast, WeatherResponse?>
     {
         private readonly ILogger<CommandMediators> logger;
         private readonly IWeatherForecastsService service;
@@ -24,28 +24,49 @@
             this.service = service;
         }
 
-        public async Task<WeatherResponse> Handle(CreateWeatherForecast request, CancellationToken cancellationToken)
+        public async Task<WeatherResponse?> Handle(CreateWeatherForecast request, CancellationToken cancellationToken)
         {
             //Add functionality to Create A Single Weather Request
-            WeatherForecast forecast = null;
+            WeatherForecast forecast = new WeatherForecast { Date = request.Date, TemperatureC = request.TemperatureC, Summary = request.Summary };
+
             WeatherForecast? result = await service.CreateWeatherForecast(forecast);
-            throw new NotImplementedException();
+
+            if (result == null)
+            {
+                return null;
+            }
+
+            return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
         }
 
-        public async Task<WeatherResponse> Handle(UpdateWeatherForecast request, CancellationToken cancellationToken)
+        public async Task<WeatherResponse?> Handle(UpdateWeatherForecast request, CancellationToken cancellationToken)
         {
             //Add functionality to Update A Single Weather Request
-            WeatherForecast forecast = null;
+            WeatherForecast forecast = new WeatherForecast { Id = request.Id, Date = request.Date, TemperatureC = request.TemperatureC, Summary = request.Summary };
+
             WeatherForecast? result = await service.UpdateWeatherForecast(forecast);
-            throw new NotImplementedException();
+
+            if (result == null)
+            {
+                return null;
+            }
+
+            return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
         }
 
-        public async Task<WeatherResponse> Handle(DeleteWeatherForecast request, CancellationToken cancellationToken)
+        public async Task<WeatherResponse?> Handle(DeleteWeatherForecast request, CancellationToken cancellationToken)
         {
             //Add functionality to Delete A Single Weather Request
-            WeatherForecast forecast = null;
+            WeatherForecast forecast = new WeatherForecast { Id = request.Id };
+
             WeatherForecast? result = await service.DeleteWeatherForecast(forecast);
-            throw new NotImplementedException();
+
+            if (result == null)
+            {
+                return null;
+            }
+
+            return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
         }
     }
 }

@@ -2,8 +2,8 @@
 {
     using MediatR;
 
-    public record CreateWeatherForecast() : IRequest<WeatherResponse>;
-    public record UpdateWeatherForecast() : IRequest<WeatherResponse>;
-    public record DeleteWeatherForecast() : IRequest<WeatherResponse>;
+    public record CreateWeatherForecast(DateTime Date, double TemperatureC, string? Summary) : IRequest<WeatherResponse>;
+    public record UpdateWeatherForecast(int Id, DateTime Date, double TemperatureC, string? Summary) : IRequest<WeatherResponse>;
+    public record DeleteWeatherForecast(int Id) : IRequest<WeatherResponse>;
 
 }

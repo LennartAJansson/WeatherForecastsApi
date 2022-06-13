@@ -1,4 +1,4 @@
 ﻿namespace WeatherForecastsApi.Contracts
 {
-    public record WeatherResponse(DateTime Date, double TempC, double TempF);
+    public record WeatherResponse(int Id, DateTime Date, double TemperatureC, double TemperatureF, string? Summary);
 }

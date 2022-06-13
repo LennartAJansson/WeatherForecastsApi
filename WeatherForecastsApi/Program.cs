@@ -28,9 +28,10 @@ string myCors = "MyCors";
 string[] origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>();
 
 builder.Services.AddCors(options => options.AddPolicy(name: myCors,
-                            conf => conf.WithOrigins(origins)));
+                            conf => conf.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod()));
 
 WebApplication? app = builder.Build();
+app.UpdateDatabase(@".\seed.json");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

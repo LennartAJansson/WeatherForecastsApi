@@ -2,6 +2,7 @@
 {
     using Microsoft.EntityFrameworkCore;
 
+    using System.Text.Json;
     using System.Threading.Tasks;
 
     using WeatherForecastsApi.Model;
@@ -34,6 +35,12 @@
 
                 if (seedFileName != null)
                 {
+                    if (File.Exists(seedFileName))
+                    {
+                        IEnumerable<WeatherForecast> forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
+                        await WeatherForecasts.AddRangeAsync(forecasts);
+                        await SaveChangesAsync();
+                    }
                     //Read file and seed data from the file
                 }
             }

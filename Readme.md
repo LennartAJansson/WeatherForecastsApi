@@ -382,6 +382,7 @@ public QueryMediators(ILogger<QueryMediators> logger, IWeatherForecastsService s
 }
 ```
 ## Step 14  
+Add methods to the mediators...  
 ## Step 15  
 Open up a Package manager console and in that console write following commands:
 ```

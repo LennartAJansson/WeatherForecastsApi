@@ -16,7 +16,6 @@
         {
             this.logger = logger;
             this.context = context;
-            context.EnsureExists().Wait();
         }
 
         public Task<IEnumerable<WeatherForecast>> ReadAllWeatherForecasts()
@@ -26,8 +25,12 @@
 
         public Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date)
         {
+            //Returns forecast for the same hour. Minutes and seconds will be ignored
+            WeatherForecast? result = context.WeatherForecasts
+                .Where(w => w.Date.Year == date.Year && w.Date.Month == date.Month && w.Date.Day == date.Day && w.Date.Hour == date.Hour)
+                .FirstOrDefault();
 
-            return Task.FromResult(context.WeatherForecasts.FirstOrDefault(w => date.Subtract(w.Date).TotalHours == 1 || w.Date.Subtract(date).TotalHours == 1));
+            return Task.FromResult(result);
         }
 
         public async Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast)
@@ -36,31 +39,46 @@
             {
                 return null;
             }
+
             context.WeatherForecasts.Add(forecast);
+
             await context.SaveChangesAsync();
+
             return forecast;
         }
 
         public async Task<WeatherForecast?> UpdateWeatherForecast(WeatherForecast forecast)
         {
-            if (context.WeatherForecasts.Find(forecast.Id) == null)
+            WeatherForecast? weatherForecast = context.WeatherForecasts.Find(forecast.Id);
+            if (weatherForecast == null)
             {
                 return null;
             }
-            context.WeatherForecasts.Update(forecast);
+
+            weatherForecast.Date = forecast.Date;
+            weatherForecast.TemperatureC = forecast.TemperatureC;
+            weatherForecast.Summary = forecast.Summary;
+
+            //context.WeatherForecasts.Update()
+
             await context.SaveChangesAsync();
+
             return forecast;
         }
 
         public async Task<WeatherForecast?> DeleteWeatherForecast(WeatherForecast forecast)
         {
-            if (context.WeatherForecasts.Find(forecast.Id) == null)
+            WeatherForecast? weatherForecast = context.WeatherForecasts.Find(forecast.Id);
+            if (weatherForecast == null)
             {
                 return null;
             }
-            context.WeatherForecasts.Remove(forecast);
+
+            context.WeatherForecasts.Remove(weatherForecast);
+
             await context.SaveChangesAsync();
-            return forecast;
+
+            return weatherForecast;
         }
     }
 }
