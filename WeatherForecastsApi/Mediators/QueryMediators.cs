@@ -1,52 +1,51 @@
-﻿namespace WeatherForecastsApi.Mediators
+﻿namespace WeatherForecastsApi.Mediators;
+
+using MediatR;
+
+using System.Threading;
+using System.Threading.Tasks;
+
+using WeatherForecastsApi.Contracts;
+using WeatherForecastsApi.Model;
+using WeatherForecastsApi.Services;
+
+//It would be possible to simply combine CommandMediators.cs and QueryMediators.cs into a single class
+public class QueryMediators :
+IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>?>,
+IRequestHandler<ReadSingleWeatherRequest, WeatherResponse?>
 {
-    using MediatR;
+    private readonly ILogger<QueryMediators> logger;
+    private readonly IWeatherForecastsService service;
 
-    using System.Threading;
-    using System.Threading.Tasks;
-
-    using WeatherForecastsApi.Contracts;
-    using WeatherForecastsApi.Model;
-    using WeatherForecastsApi.Services;
-
-    //It would be possible to simply combine CommandMediators.cs and QueryMediators.cs into a single class
-    public class QueryMediators :
-    IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>?>,
-    IRequestHandler<ReadSingleWeatherRequest, WeatherResponse?>
+    public QueryMediators(ILogger<QueryMediators> logger, IWeatherForecastsService service)
     {
-        private readonly ILogger<QueryMediators> logger;
-        private readonly IWeatherForecastsService service;
+        this.logger = logger;
+        this.service = service;
+    }
 
-        public QueryMediators(ILogger<QueryMediators> logger, IWeatherForecastsService service)
+    public async Task<IEnumerable<WeatherResponse>?> Handle(ReadAllWeatherRequest request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Read All Weather Requests
+        IEnumerable<WeatherForecast>? result = await service.ReadAllWeatherForecasts();
+
+        if (result == null)
         {
-            this.logger = logger;
-            this.service = service;
+            return null;
         }
 
-        public async Task<IEnumerable<WeatherResponse>?> Handle(ReadAllWeatherRequest request, CancellationToken cancellationToken)
+        return result.Select(weatherForecast => new WeatherResponse(weatherForecast.Id, weatherForecast.Date, weatherForecast.TemperatureC, weatherForecast.TemperatureF, weatherForecast.Summary));
+    }
+
+    public async Task<WeatherResponse?> Handle(ReadSingleWeatherRequest request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Read A Single Weather Request
+        WeatherForecast? result = await service.ReadSingleWeatherForecast(request.Date);
+
+        if (result == null)
         {
-            //Add functionality to Read All Weather Requests
-            IEnumerable<WeatherForecast>? result = await service.ReadAllWeatherForecasts();
-
-            if (result == null)
-            {
-                return null;
-            }
-
-            return result.Select(weatherForecast => new WeatherResponse(weatherForecast.Id, weatherForecast.Date, weatherForecast.TemperatureC, weatherForecast.TemperatureF, weatherForecast.Summary));
+            return null;
         }
 
-        public async Task<WeatherResponse?> Handle(ReadSingleWeatherRequest request, CancellationToken cancellationToken)
-        {
-            //Add functionality to Read A Single Weather Request
-            WeatherForecast? result = await service.ReadSingleWeatherForecast(request.Date);
-
-            if (result == null)
-            {
-                return null;
-            }
-
-            return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
-        }
+        return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
     }
 }

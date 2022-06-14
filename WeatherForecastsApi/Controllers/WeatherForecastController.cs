@@ -1,101 +1,100 @@
-namespace WeatherForecastsApi.Controllers
+namespace WeatherForecastsApi.Controllers;
+
+using MediatR;
+
+using Microsoft.AspNetCore.Mvc;
+
+using WeatherForecastsApi.Contracts;
+
+[ApiController]
+[Route("[controller]/[action]")]
+public class WeatherForecastController : ControllerBase
 {
-    using MediatR;
+    private readonly ILogger<WeatherForecastController> logger;
+    private readonly IMediator mediator;
 
-    using Microsoft.AspNetCore.Mvc;
-
-    using WeatherForecastsApi.Contracts;
-
-    [ApiController]
-    [Route("[controller]/[action]")]
-    public class WeatherForecastController : ControllerBase
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IMediator mediator)
     {
-        private readonly ILogger<WeatherForecastController> logger;
-        private readonly IMediator mediator;
+        this.logger = logger;
+        this.mediator = mediator;
+    }
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IMediator mediator)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        ReadAllWeatherRequest request = new ReadAllWeatherRequest();
+
+        IEnumerable<WeatherResponse>? response = await mediator.Send(request);
+
+        if (response == null)
         {
-            this.logger = logger;
-            this.mediator = mediator;
+            return NotFound();
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        else
         {
-            ReadAllWeatherRequest request = new ReadAllWeatherRequest();
-
-            IEnumerable<WeatherResponse>? response = await mediator.Send(request);
-
-            if (response == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(response);
-            }
+            return Ok(response);
         }
+    }
 
-        [HttpGet("{date}")]
-        public async Task<IActionResult> GetOne(DateTime date)
+    [HttpGet("{date}")]
+    public async Task<IActionResult> GetOne(DateTime date)
+    {
+        ReadSingleWeatherRequest request = new ReadSingleWeatherRequest(date);
+
+        WeatherResponse? response = await mediator.Send(request);
+
+        if (response == null)
         {
-            ReadSingleWeatherRequest request = new ReadSingleWeatherRequest(date);
-
-            WeatherResponse? response = await mediator.Send(request);
-
-            if (response == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(response);
-            }
+            return NotFound();
         }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateOne([FromBody] CreateWeatherForecast request)
+        else
         {
-            WeatherResponse? response = await mediator.Send(request);
-
-            if (response == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(response);
-            }
+            return Ok(response);
         }
+    }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateOne([FromBody] UpdateWeatherForecast request)
+    [HttpPost]
+    public async Task<IActionResult> CreateOne([FromBody] CreateWeatherForecast request)
+    {
+        WeatherResponse? response = await mediator.Send(request);
+
+        if (response == null)
         {
-            WeatherResponse? response = await mediator.Send(request);
-
-            if (response == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(response);
-            }
+            return NotFound();
         }
-
-        [HttpDelete]
-        public async Task<IActionResult> DeleteOne([FromBody] DeleteWeatherForecast request)
+        else
         {
-            WeatherResponse? response = await mediator.Send(request);
+            return Ok(response);
+        }
+    }
 
-            if (response == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(response);
-            }
+    [HttpPut]
+    public async Task<IActionResult> UpdateOne([FromBody] UpdateWeatherForecast request)
+    {
+        WeatherResponse? response = await mediator.Send(request);
+
+        if (response == null)
+        {
+            return NotFound();
+        }
+        else
+        {
+            return Ok(response);
+        }
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteOne([FromBody] DeleteWeatherForecast request)
+    {
+        WeatherResponse? response = await mediator.Send(request);
+
+        if (response == null)
+        {
+            return NotFound();
+        }
+        else
+        {
+            return Ok(response);
         }
     }
 }

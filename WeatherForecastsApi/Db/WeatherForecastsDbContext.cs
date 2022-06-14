@@ -1,53 +1,52 @@
-﻿namespace WeatherForecastsApi.Db
+﻿namespace WeatherForecastsApi.Db;
+
+using Microsoft.EntityFrameworkCore;
+
+using System.Text.Json;
+using System.Threading.Tasks;
+
+using WeatherForecastsApi.Model;
+
+public class WeatherForecastsDbContext : DbContext, IWeatherForecastsDbContext
 {
-    using Microsoft.EntityFrameworkCore;
+    private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+    protected ILogger<WeatherForecastsDbContext> logger = loggerFactory.CreateLogger<WeatherForecastsDbContext>();
 
-    using System.Text.Json;
-    using System.Threading.Tasks;
+    public DbSet<WeatherForecast>? WeatherForecasts { get; set; }
 
-    using WeatherForecastsApi.Model;
-
-    public class WeatherForecastsDbContext : DbContext, IWeatherForecastsDbContext
+    public WeatherForecastsDbContext(DbContextOptions<WeatherForecastsDbContext> options)
+        : base(options)
     {
-        private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        protected ILogger<WeatherForecastsDbContext> logger = loggerFactory.CreateLogger<WeatherForecastsDbContext>();
+    }
 
-        public DbSet<WeatherForecast>? WeatherForecasts { get; set; }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        _ = optionsBuilder.UseLoggerFactory(loggerFactory);
+    }
 
-        public WeatherForecastsDbContext(DbContextOptions<WeatherForecastsDbContext> options)
-            : base(options)
+    public async Task EnsureExists(string? seedFileName = null)
+    {
+        IEnumerable<string> migrations = Database.GetPendingMigrations();
+        if (migrations.Any())
         {
+            logger?.LogInformation("Adding {count} migrations", migrations.Count());
+            await Database.MigrateAsync();
+        }
+        else
+        {
+            logger?.LogInformation("Migrations are up to date");
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        if (WeatherForecasts != null && !WeatherForecasts.Any())
         {
-            _ = optionsBuilder.UseLoggerFactory(loggerFactory);
-        }
-
-        public async Task EnsureExists(string? seedFileName = null)
-        {
-            IEnumerable<string> migrations = Database.GetPendingMigrations();
-            if (migrations.Any())
+            if (seedFileName != null && File.Exists(seedFileName))
             {
-                logger?.LogInformation("Adding {count} migrations", migrations.Count());
-                await Database.MigrateAsync();
-            }
-            else
-            {
-                logger?.LogInformation("Migrations are up to date");
-            }
-
-            if (WeatherForecasts != null && !WeatherForecasts.Any())
-            {
-                if (seedFileName != null && File.Exists(seedFileName))
+                IEnumerable<WeatherForecast>? forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
+                if (forecasts != null && forecasts.Any())
                 {
-                    IEnumerable<WeatherForecast>? forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
-                    if (forecasts != null && forecasts.Any())
-                    {
-                        logger?.LogInformation("Adding {count} seeded data", forecasts.Count());
-                        await WeatherForecasts.AddRangeAsync(forecasts);
-                        await SaveChangesAsync();
-                    }
+                    logger?.LogInformation("Adding {count} seeded data", forecasts.Count());
+                    await WeatherForecasts.AddRangeAsync(forecasts);
+                    await SaveChangesAsync();
                 }
             }
         }

@@ -1,7 +1,6 @@
-﻿namespace WeatherForecastsApi.Contracts
-{
-    using MediatR;
+﻿namespace WeatherForecastsApi.Contracts;
 
-    public record ReadAllWeatherRequest() : IRequest<IEnumerable<WeatherResponse>>;
-    public record ReadSingleWeatherRequest(DateTime Date) : IRequest<WeatherResponse>;
-}
+using MediatR;
+
+public record ReadAllWeatherRequest() : IRequest<IEnumerable<WeatherResponse>>;
+public record ReadSingleWeatherRequest(DateTime Date) : IRequest<WeatherResponse>;
