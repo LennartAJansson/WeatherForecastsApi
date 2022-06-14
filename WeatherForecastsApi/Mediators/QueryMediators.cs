@@ -33,7 +33,7 @@
                 return null;
             }
 
-            return result.Select(r => new WeatherResponse(r.Id, r.Date, r.TemperatureC, r.TemperatureF, r.Summary));
+            return result.Select(weatherForecast => new WeatherResponse(weatherForecast.Id, weatherForecast.Date, weatherForecast.TemperatureC, weatherForecast.TemperatureF, weatherForecast.Summary));
         }
 
         public async Task<WeatherResponse?> Handle(ReadSingleWeatherRequest request, CancellationToken cancellationToken)

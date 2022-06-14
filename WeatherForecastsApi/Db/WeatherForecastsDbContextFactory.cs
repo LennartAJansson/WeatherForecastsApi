@@ -12,11 +12,11 @@
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile("appsettings.Development.json")
-                .AddUserSecrets("e67fa587-4890-43d7-b8bf-960f9081e37d")
+                .AddUserSecrets(Constants.UserSecretsId)
                 //.AddUserSecrets<WeatherForecastController>()
                 .Build();
 
-            string? connectionString = configuration.GetConnectionString("WeatherForecastsDb");
+            string? connectionString = configuration.GetConnectionString(Constants.ConnectionStringName);
 
             return new WeatherForecastsDbContext(new DbContextOptionsBuilder<WeatherForecastsDbContext>()
                 .UseSqlServer(connectionString)

@@ -570,3 +570,5 @@ In the project rootfolder add a file named seed.json, it should contain some sam
   }
 ]
 ```
+## Step 16 Moving all constants to a Constants class  
+To keep all values used in the application you could use a static class for them, see Constants.cs
