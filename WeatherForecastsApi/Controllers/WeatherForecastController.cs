@@ -10,13 +10,12 @@ namespace WeatherForecastsApi.Controllers
     [Route("[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-
-        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ILogger<WeatherForecastController> logger;
         private readonly IMediator mediator;
 
         public WeatherForecastController(ILogger<WeatherForecastController> logger, IMediator mediator)
         {
-            _logger = logger;
+            this.logger = logger;
             this.mediator = mediator;
         }
 
