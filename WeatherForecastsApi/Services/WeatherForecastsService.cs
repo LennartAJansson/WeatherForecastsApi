@@ -21,6 +21,7 @@
         public Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts()
         {
             IEnumerable<WeatherForecast>? result = context.WeatherForecasts?.AsEnumerable();
+
             return Task.FromResult(result);
         }
 
@@ -36,14 +37,18 @@
 
         public async Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast)
         {
-            if (await ReadSingleWeatherForecast(forecast.Date) != null)
+            WeatherForecast? result = await ReadSingleWeatherForecast(forecast.Date);
+            if (result != null)
             {
+                logger.LogInformation("WeatherForecast already exists, not added");
                 return null;
             }
 
             context.WeatherForecasts?.Add(forecast);
 
             await context.SaveChangesAsync();
+
+            logger.LogInformation("WeatherForecast added");
 
             return forecast;
         }
@@ -53,6 +58,7 @@
             WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
             if (weatherForecast == null)
             {
+                logger.LogInformation("WeatherForecast not found, not updated");
                 return null;
             }
 
@@ -60,11 +66,11 @@
             weatherForecast.TemperatureC = forecast.TemperatureC;
             weatherForecast.Summary = forecast.Summary;
 
-            //context.WeatherForecasts.Update()
-
             await context.SaveChangesAsync();
 
-            return forecast;
+            logger.LogInformation("WeatherForecast updated");
+
+            return weatherForecast;
         }
 
         public async Task<WeatherForecast?> DeleteWeatherForecast(WeatherForecast forecast)
@@ -72,12 +78,15 @@
             WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
             if (weatherForecast == null)
             {
+                logger.LogInformation("WeatherForecast not found, not deleted");
                 return null;
             }
 
             context.WeatherForecasts?.Remove(weatherForecast);
 
             await context.SaveChangesAsync();
+
+            logger.LogInformation("WeatherForecast deleted");
 
             return weatherForecast;
         }

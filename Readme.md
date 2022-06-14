@@ -1,7 +1,7 @@
-## Step 1  
+## Step 1 Creating the Web API  
 Create a ASP.NET Web API from the Template  
 Add a reference to 'MediatR.Extensions.Microsoft.DependencyInjection'  
-## Step 2  
+## Step 2 Adding contracts  
 Create a folder named Contracts  
 Add records for request data types  
 Add records for response data types  
@@ -16,8 +16,7 @@ public record UpdateWeatherForecast() : IRequest<WeatherResponse>;
 public record DeleteWeatherForecast() : IRequest<WeatherResponse>;
 public record WeatherResponse(int Id, DateTime Date, double TemperatureC, double TemperatureF, string? Summary);
 ```
-
-## Step 3
+## Step 3 Adding mediators  
 Create a folder named Mediators  
 Add classes (or a single class, think "Single Responsibility", the requesthandlers should have the same responsibility area) for your QueryMediators and CommandMediators, they should implement the interface IRequestHandler for each request type returning its responsetype:  
 ```
@@ -63,7 +62,7 @@ public class QueryMediators :
     }
 }
 ```
-## Step 4  
+## Step 4 Using the mediators from the controller  
 Update the controller to look like this:
 ```
 [ApiController]
@@ -160,7 +159,7 @@ public class WeatherForecastController : ControllerBase
 }
 ```
 
-## Step 5  
+## Step 5 Implementing the mediators  
 In program.cs add following lines after "//Add services to the container"
 
 ```
@@ -169,14 +168,14 @@ builder.Services.AddMediatR(Assembly.GetAssembly(typeof(WeatherForecastControlle
     ?? throw new ArgumentNullException("Couldn't find assembly"));
 ```
 
-## Step 6 
+## Step 6 Adding a connection string 
 In appsettings.json add following configuration:  
 ```
 "ConnectionStrings": {
   "WeatherForecastsDb": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=WeatherForecastsDb;Integrated Security=True;"
 }
 ``` 
-## Step 7  
+## Step 7 Updating the model  
 Move WeatherForecast.cs from the project root into the folder named Model, make a small change to it so it looks like this:
 ```
 public class WeatherForecast
@@ -192,7 +191,7 @@ public class WeatherForecast
     public string? Summary { get; set; }
 }
 ```
-## Step 8  
+## Step 8 Updating the contracts  
 When we are at it creating a model we could update our records in the folder Contracts to reflect the model.
 Update Commands.cs to:
 ```
@@ -204,7 +203,7 @@ Update Responses.cs to:
 ```
 public record WeatherResponse(int Id, DateTime Date, double TemperatureC, double TemperatureF, string? Summary);
 ```
-## Step 9  
+## Step 9 Setting up a db context  
 Add one interface and two classes to the folder Db:  
 IWeatherForecastsDbContext.cs:  
 ```
@@ -287,7 +286,7 @@ public class WeatherForecastsDbContextFactory : IDesignTimeDbContextFactory<Weat
     }
 }
 ```
-## Step 10  
+## Step 10 Adding db services  
 Add a folder named Services and add following interface and class to it.  
 IWeatherForecastsService.cs:  
 ```
@@ -316,6 +315,7 @@ public class WeatherForecastsService : IWeatherForecastsService
     public Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts()
     {
         IEnumerable<WeatherForecast>? result = context.WeatherForecasts?.AsEnumerable();
+
         return Task.FromResult(result);
     }
 
@@ -331,14 +331,18 @@ public class WeatherForecastsService : IWeatherForecastsService
 
     public async Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast)
     {
-        if (await ReadSingleWeatherForecast(forecast.Date) != null)
+        WeatherForecast? result = await ReadSingleWeatherForecast(forecast.Date);
+        if (result != null)
         {
+            logger.LogInformation("WeatherForecast already exists, not added");
             return null;
         }
 
         context.WeatherForecasts?.Add(forecast);
 
         await context.SaveChangesAsync();
+
+        logger.LogInformation("WeatherForecast added");
 
         return forecast;
     }
@@ -348,6 +352,7 @@ public class WeatherForecastsService : IWeatherForecastsService
         WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
         if (weatherForecast == null)
         {
+            logger.LogInformation("WeatherForecast not found, not updated");
             return null;
         }
 
@@ -357,7 +362,9 @@ public class WeatherForecastsService : IWeatherForecastsService
 
         await context.SaveChangesAsync();
 
-        return forecast;
+        logger.LogInformation("WeatherForecast updated");
+
+        return weatherForecast;
     }
 
     public async Task<WeatherForecast?> DeleteWeatherForecast(WeatherForecast forecast)
@@ -365,6 +372,7 @@ public class WeatherForecastsService : IWeatherForecastsService
         WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
         if (weatherForecast == null)
         {
+            logger.LogInformation("WeatherForecast not found, not deleted");
             return null;
         }
 
@@ -372,11 +380,13 @@ public class WeatherForecastsService : IWeatherForecastsService
 
         await context.SaveChangesAsync();
 
+        logger.LogInformation("WeatherForecast deleted");
+
         return weatherForecast;
     }
 }
 ```
-## Step 11  
+## Step 11 Adding db extensions  
 Add a folder named Extensions and add following extension class to it.  
 WeatherForecastsDbExtension.cs  
 ```
@@ -399,7 +409,7 @@ public static class WeatherForecastsDbExtension
     }
 }
 ```  
-## Step 12  
+## Step 12 Implement the db context  
 Add following line to Program.cs (before the line with AddMediatR)  
 ```
 builder.Services.AddWeatherForecastsDb(builder.Configuration.GetConnectionString("WeatherForecastsDb"));
@@ -408,7 +418,7 @@ After the line with builder.Build(), in the same file, add:
 ```
 app.UpdateDatabase(@".\seed.json");
 ```
-## Step 13  
+## Step 13 Finalizing mediators  
 Update CommandMediator.cs:  
 ```
 public class CommandMediators :
@@ -513,13 +523,13 @@ public class QueryMediators :
     }
 }
 ```
-## Step 14  
+## Step 14 Create db migration  
 Open up a Package manager console and in that console write following commands:
 ```
 Add-Migration Initial
 Update-Database
 ```
-## Step 15  
+## Step 15 Adding sample data 
 In the project rootfolder add a file named seed.json, it should contain some sample data in the following shape (add as many you want):  
 ```
 [
