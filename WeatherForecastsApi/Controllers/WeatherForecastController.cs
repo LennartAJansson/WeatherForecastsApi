@@ -1,22 +1,21 @@
-namespace WebApplication1.Controllers
+namespace WeatherForecastsApi.Controllers
 {
     using MediatR;
 
     using Microsoft.AspNetCore.Mvc;
 
-    using WebApplication1.Contracts;
+    using WeatherForecastsApi.Contracts;
 
     [ApiController]
     [Route("[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-
-        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ILogger<WeatherForecastController> logger;
         private readonly IMediator mediator;
 
         public WeatherForecastController(ILogger<WeatherForecastController> logger, IMediator mediator)
         {
-            _logger = logger;
+            this.logger = logger;
             this.mediator = mediator;
         }
 
