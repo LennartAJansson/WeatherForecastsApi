@@ -11,8 +11,8 @@
 
     //It would be possible to simply combine CommandMediators.cs and QueryMediators.cs into a single class
     public class QueryMediators :
-        IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>?>,
-        IRequestHandler<ReadSingleWeatherRequest, WeatherResponse?>
+    IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>?>,
+    IRequestHandler<ReadSingleWeatherRequest, WeatherResponse?>
     {
         private readonly ILogger<QueryMediators> logger;
         private readonly IWeatherForecastsService service;

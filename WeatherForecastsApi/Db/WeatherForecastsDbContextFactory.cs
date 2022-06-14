@@ -2,8 +2,7 @@
 {
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Design;
-
-    using WeatherForecastsApi.Controllers;
+    using Microsoft.Extensions.Configuration;
 
     public class WeatherForecastsDbContextFactory : IDesignTimeDbContextFactory<WeatherForecastsDbContext>
     {
@@ -13,7 +12,8 @@
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile("appsettings.Development.json")
-                .AddUserSecrets<WeatherForecastController>()
+                .AddUserSecrets("e67fa587-4890-43d7-b8bf-960f9081e37d")
+                //.AddUserSecrets<WeatherForecastController>()
                 .Build();
 
             string? connectionString = configuration.GetConnectionString("WeatherForecastsDb");

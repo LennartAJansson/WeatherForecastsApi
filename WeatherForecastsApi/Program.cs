@@ -5,12 +5,6 @@ using System.Reflection;
 using WeatherForecastsApi.Controllers;
 using WeatherForecastsApi.Extensions;
 
-//WebApplicationOptions? options = new WebApplicationOptions
-//{
-//    Args = args,
-//    ContentRootPath = WindowsServiceHelpers.IsWindowsService() ? AppContext.BaseDirectory : default
-//};
-
 WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

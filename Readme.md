@@ -194,13 +194,25 @@ public class WeatherForecast
     public string? Summary { get; set; }
 }
 ```
+## Step 8  
+When we are at it creating a model we could update our records in the folder Contracts to reflect the model.
+Update Commands.cs to:
+```
+public record CreateWeatherForecast(DateTime Date, double TemperatureC, string? Summary) : IRequest<WeatherResponse>;
+public record UpdateWeatherForecast(int Id, DateTime Date, double TemperatureC, string? Summary) : IRequest<WeatherResponse>;
+public record DeleteWeatherForecast(int Id) : IRequest<WeatherResponse>;
+```
+Update Responses.cs to:
+```
+public record WeatherResponse(int Id, DateTime Date, double TemperatureC, double TemperatureF, string? Summary);
+```
 ## Step 9  
 Add one interface and two classes to the folder Db:  
 IWeatherForecastsDbContext.cs:  
 ```
 public interface IWeatherForecastsDbContext
 {
-    DbSet<WeatherForecast> WeatherForecasts { get; set; }
+    DbSet<WeatherForecast>? WeatherForecasts { get; set; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken));
     Task EnsureExists(string? seedFileName = null);
 }
@@ -212,7 +224,7 @@ public class WeatherForecastsDbContext : DbContext, IWeatherForecastsDbContext
     private static readonly ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
     protected ILogger<WeatherForecastsDbContext> logger = loggerFactory.CreateLogger<WeatherForecastsDbContext>();
 
-    public DbSet<WeatherForecast> WeatherForecasts { get; set; }
+    public DbSet<WeatherForecast>? WeatherForecasts { get; set; }
 
     public WeatherForecastsDbContext(DbContextOptions<WeatherForecastsDbContext> options)
         : base(options)
@@ -231,15 +243,24 @@ public class WeatherForecastsDbContext : DbContext, IWeatherForecastsDbContext
         {
             logger?.LogInformation("Adding {count} migrations", migrations.Count());
             await Database.MigrateAsync();
-
-            if (seedFileName != null)
-            {
-                //Read file and seed data from the file
-            }
         }
         else
         {
             logger?.LogInformation("Migrations are up to date");
+        }
+
+        if (WeatherForecasts != null && !WeatherForecasts.Any())
+        {
+            if (seedFileName != null && File.Exists(seedFileName))
+            {
+                IEnumerable<WeatherForecast>? forecasts = JsonSerializer.Deserialize<IEnumerable<WeatherForecast>>(File.ReadAllText(seedFileName));
+                if (forecasts != null && forecasts.Any())
+                {
+                    logger?.LogInformation("Adding {count} seeded data", forecasts.Count());
+                    await WeatherForecasts.AddRangeAsync(forecasts);
+                    await SaveChangesAsync();
+                }
+            }
         }
     }
 }
@@ -254,7 +275,10 @@ public class WeatherForecastsDbContextFactory : IDesignTimeDbContextFactory<Weat
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
             .AddJsonFile("appsettings.Development.json")
-            .AddUserSecrets<WeatherForecastController>()
+            //Either add the UserSecretsId from your .csproj
+            .AddUserSecrets("e67fa587-4890-43d7-b8bf-960f9081e37d")
+            //Or you could use the typed version of AddUserSecrets
+            //.AddUserSecrets<WeatherForecastController>()
             .Build();
 
         string? connectionString = configuration.GetConnectionString("WeatherForecastsDb");
@@ -271,7 +295,7 @@ IWeatherForecastsService.cs:
 ```
 public interface IWeatherForecastsService
 {
-    Task<IEnumerable<WeatherForecast>> ReadAllWeatherForecasts();
+    Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts();
     Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date);
     Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast);
     Task<WeatherForecast?> UpdateWeatherForecast(WeatherForecast forecast);
@@ -289,18 +313,22 @@ public class WeatherForecastsService : IWeatherForecastsService
     {
         this.logger = logger;
         this.context = context;
-        context.EnsureExists().Wait();
     }
 
-    public Task<IEnumerable<WeatherForecast>> ReadAllWeatherForecasts()
+    public Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts()
     {
-        return Task.FromResult(context.WeatherForecasts.AsEnumerable());
+        IEnumerable<WeatherForecast>? result = context.WeatherForecasts?.AsEnumerable();
+        return Task.FromResult(result);
     }
 
     public Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date)
     {
+        //Returns forecast for the same hour. Minutes and seconds will be ignored
+        WeatherForecast? result = context.WeatherForecasts?
+            .Where(w => w.Date.Year == date.Year && w.Date.Month == date.Month && w.Date.Day == date.Day && w.Date.Hour == date.Hour)
+            .FirstOrDefault();
 
-        return Task.FromResult(context.WeatherForecasts.FirstOrDefault(w => date.Subtract(w.Date).TotalHours == 1 || w.Date.Subtract(date).TotalHours == 1));
+        return Task.FromResult(result);
     }
 
     public async Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast)
@@ -309,31 +337,44 @@ public class WeatherForecastsService : IWeatherForecastsService
         {
             return null;
         }
-        context.WeatherForecasts.Add(forecast);
+
+        context.WeatherForecasts?.Add(forecast);
+
         await context.SaveChangesAsync();
+
         return forecast;
     }
 
     public async Task<WeatherForecast?> UpdateWeatherForecast(WeatherForecast forecast)
     {
-        if (context.WeatherForecasts.Find(forecast.Id) == null)
+        WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
+        if (weatherForecast == null)
         {
             return null;
         }
-        context.WeatherForecasts.Update(forecast);
+
+        weatherForecast.Date = forecast.Date;
+        weatherForecast.TemperatureC = forecast.TemperatureC;
+        weatherForecast.Summary = forecast.Summary;
+
         await context.SaveChangesAsync();
+
         return forecast;
     }
 
     public async Task<WeatherForecast?> DeleteWeatherForecast(WeatherForecast forecast)
     {
-        if (context.WeatherForecasts.Find(forecast.Id) == null)
+        WeatherForecast? weatherForecast = context.WeatherForecasts?.Find(forecast.Id);
+        if (weatherForecast == null)
         {
             return null;
         }
-        context.WeatherForecasts.Remove(forecast);
+
+        context.WeatherForecasts?.Remove(weatherForecast);
+
         await context.SaveChangesAsync();
-        return forecast;
+
+        return weatherForecast;
     }
 }
 ```
@@ -343,49 +384,181 @@ WeatherForecastsDbExtension.cs
 ```
 public static class WeatherForecastsDbExtension
 {
-    public static IServiceCollection AddWeatherForecastsDb(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddWeatherForecastsDb(this IServiceCollection services, string connectionString)
     {
-        return services
-            .AddTransient<IWeatherForecastsService, WeatherForecastsService>()
-            .AddDbContext<WeatherForecastsDbContext>(options => options
-                .UseSqlServer(configuration.GetConnectionString("WeatherForecastsDb")),
-                    ServiceLifetime.Transient, ServiceLifetime.Transient);
+        services.AddScoped<IWeatherForecastsService, WeatherForecastsService>();
+        services.AddDbContext<IWeatherForecastsDbContext, WeatherForecastsDbContext>(options => options
+                .UseSqlServer(connectionString), ServiceLifetime.Transient, ServiceLifetime.Transient);
+
+        return services;
+    }
+
+    public static WebApplication UpdateDatabase(this WebApplication application, string seedFileName)
+    {
+        IWeatherForecastsDbContext ctx = application.Services.GetRequiredService<IWeatherForecastsDbContext>();
+        ctx.EnsureExists(seedFileName);
+        return application;
     }
 }
 ```  
 ## Step 12  
-Add following line to Program.cs (after the line with AddMediatR)  
+Add following line to Program.cs (before the line with AddMediatR)  
 ```
 builder.Services.AddWeatherForecastsDb(builder.Configuration.GetConnectionString("WeatherForecastsDb"));
 ```
-## Step 13  
-Add following fields and constructor to CommandMediator.cs:  
+After the line with builder.Build(), in the same file, add:
 ```
-private readonly ILogger<CommandMediators> logger;
-private readonly IWeatherForecastsService service;
-
-public CommandMediators(ILogger<CommandMediators> logger, IWeatherForecastsService service)
+app.UpdateDatabase(@".\seed.json");
+```
+## Step 13  
+Update CommandMediator.cs:  
+```
+public class CommandMediators :
+    IRequestHandler<CreateWeatherForecast, WeatherResponse?>,
+    IRequestHandler<UpdateWeatherForecast, WeatherResponse?>,
+    IRequestHandler<DeleteWeatherForecast, WeatherResponse?>
 {
-    this.logger = logger;
-    this.service = service;
+    private readonly ILogger<CommandMediators> logger;
+    private readonly IWeatherForecastsService service;
+
+    public CommandMediators(ILogger<CommandMediators> logger, IWeatherForecastsService service)
+    {
+        this.logger = logger;
+        this.service = service;
+    }
+
+    public async Task<WeatherResponse?> Handle(CreateWeatherForecast request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Create A Single Weather Request
+        WeatherForecast forecast = new WeatherForecast { Date = request.Date, TemperatureC = request.TemperatureC, Summary = request.Summary };
+
+        WeatherForecast? result = await service.CreateWeatherForecast(forecast);
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
+    }
+
+    public async Task<WeatherResponse?> Handle(UpdateWeatherForecast request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Update A Single Weather Request
+        WeatherForecast forecast = new WeatherForecast { Id = request.Id, Date = request.Date, TemperatureC = request.TemperatureC, Summary = request.Summary };
+
+        WeatherForecast? result = await service.UpdateWeatherForecast(forecast);
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
+    }
+
+    public async Task<WeatherResponse?> Handle(DeleteWeatherForecast request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Delete A Single Weather Request
+        WeatherForecast forecast = new WeatherForecast { Id = request.Id };
+
+        WeatherForecast? result = await service.DeleteWeatherForecast(forecast);
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
+    }
 }
 ```
-Add following fields and constructor to QueryMediator.cs:  
+Update QueryMediator.cs:  
 ```
-private readonly ILogger<QueryMediators> logger;
-private readonly IWeatherForecastsService service;
-
-public QueryMediators(ILogger<QueryMediators> logger, IWeatherForecastsService service)
+public class QueryMediators :
+    IRequestHandler<ReadAllWeatherRequest, IEnumerable<WeatherResponse>?>,
+    IRequestHandler<ReadSingleWeatherRequest, WeatherResponse?>
 {
-    this.logger = logger;
-    this.service = service;
+    private readonly ILogger<QueryMediators> logger;
+    private readonly IWeatherForecastsService service;
+
+    public QueryMediators(ILogger<QueryMediators> logger, IWeatherForecastsService service)
+    {
+        this.logger = logger;
+        this.service = service;
+    }
+
+    public async Task<IEnumerable<WeatherResponse>?> Handle(ReadAllWeatherRequest request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Read All Weather Requests
+        IEnumerable<WeatherForecast>? result = await service.ReadAllWeatherForecasts();
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return result.Select(r => new WeatherResponse(r.Id, r.Date, r.TemperatureC, r.TemperatureF, r.Summary));
+    }
+
+    public async Task<WeatherResponse?> Handle(ReadSingleWeatherRequest request, CancellationToken cancellationToken)
+    {
+        //Add functionality to Read A Single Weather Request
+        WeatherForecast? result = await service.ReadSingleWeatherForecast(request.Date);
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return new WeatherResponse(result.Id, result.Date, result.TemperatureC, result.TemperatureF, result.Summary);
+    }
 }
 ```
 ## Step 14  
-Add methods to the mediators...  
-## Step 15  
 Open up a Package manager console and in that console write following commands:
 ```
 Add-Migration Initial
 Update-Database
+```
+## Step 15  
+In the project rootfolder add a file named seed.json, it should contain some sample data in the following shape (add as many you want):  
+```
+[
+  {
+    "Date": "2022-06-01T00:00:00",
+    "TemperatureC": 10,
+    "Summary": "Summer"
+  },
+  {
+    "Date": "2022-06-01T01:00:00",
+    "TemperatureC": 11,
+    "Summary": "Summer"
+  },
+  {
+    "Date": "2022-06-01T02:00:00",
+    "TemperatureC": 12,
+    "Summary": "Summer"
+  },
+  {
+    "Date": "2022-06-01T03:00:00",
+    "TemperatureC": 13,
+    "Summary": "Summer"
+  },
+  {
+    "Date": "2022-06-01T04:00:00",
+    "TemperatureC": 14,
+    "Summary": "Summer"
+  },
+  {
+    "Date": "2022-06-01T05:00:00",
+    "TemperatureC": 15,
+    "Summary": "Summer"
+  },
+  {
+    "Date": "2022-06-01T06:00:00",
+    "TemperatureC": 16,
+    "Summary": "Summer"
+  }
+]
 ```
