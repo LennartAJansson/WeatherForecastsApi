@@ -1,5 +1,7 @@
 ﻿namespace WeatherForecastsApi.Services
 {
+    using Microsoft.EntityFrameworkCore;
+
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -18,21 +20,21 @@
             this.context = context;
         }
 
-        public Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts()
+        public async Task<IEnumerable<WeatherForecast>?> ReadAllWeatherForecasts()
         {
-            IEnumerable<WeatherForecast>? result = context.WeatherForecasts?.AsEnumerable();
+            IEnumerable<WeatherForecast>? result = await context.WeatherForecasts!.ToListAsync();
 
-            return Task.FromResult(result);
+            return result;
         }
 
-        public Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date)
+        public async Task<WeatherForecast?> ReadSingleWeatherForecast(DateTime date)
         {
             //Returns forecast for the same hour. Minutes and seconds will be ignored
-            WeatherForecast? result = context.WeatherForecasts?
+            WeatherForecast? result = await context.WeatherForecasts!
                 .Where(w => w.Date.Year == date.Year && w.Date.Month == date.Month && w.Date.Day == date.Day && w.Date.Hour == date.Hour)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
-            return Task.FromResult(result);
+            return result;
         }
 
         public async Task<WeatherForecast?> CreateWeatherForecast(WeatherForecast forecast)

@@ -18,8 +18,14 @@
 
         public static WebApplication UpdateDatabase(this WebApplication application, string seedFileName)
         {
-            IWeatherForecastsDbContext ctx = application.Services.GetRequiredService<IWeatherForecastsDbContext>();
-            ctx.EnsureExists(seedFileName);
+            using (IServiceScope? scope = application.Services.CreateScope())
+            {
+                IServiceProvider? services = scope.ServiceProvider;
+
+                IWeatherForecastsDbContext? context = services.GetRequiredService<IWeatherForecastsDbContext>();
+                context.EnsureExists(seedFileName);
+            }
+
             return application;
         }
     }
