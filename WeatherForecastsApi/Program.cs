@@ -21,11 +21,13 @@ builder.Services.AddSwaggerGen();
 
 //Cors not included in documentation, see more in appsettings.json
 string[] origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>();
+string[] methods = builder.Configuration.GetSection("Cors:Methods").Get<string[]>();
+string[] headers = builder.Configuration.GetSection("Cors:Headers").Get<string[]>();
 
 builder.Services.AddCors(options => options.AddPolicy(name: Constants.CorsPolicyName,
                             conf => conf.WithOrigins(origins)
-                                .AllowAnyHeader()
-                                .AllowAnyMethod()));
+                                .WithHeaders(headers)
+                                .WithMethods(methods)));
 
 WebApplication? app = builder.Build();
 

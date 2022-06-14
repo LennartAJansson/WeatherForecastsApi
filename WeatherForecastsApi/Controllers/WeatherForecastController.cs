@@ -20,6 +20,8 @@ public class WeatherForecastController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<WeatherResponse>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAll()
     {
         ReadAllWeatherRequest request = new ReadAllWeatherRequest();
@@ -37,6 +39,8 @@ public class WeatherForecastController : ControllerBase
     }
 
     [HttpGet("{date}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WeatherResponse))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOne(DateTime date)
     {
         ReadSingleWeatherRequest request = new ReadSingleWeatherRequest(date);
@@ -54,6 +58,8 @@ public class WeatherForecastController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(WeatherResponse))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateOne([FromBody] CreateWeatherForecast request)
     {
         WeatherResponse? response = await mediator.Send(request);
@@ -64,11 +70,13 @@ public class WeatherForecastController : ControllerBase
         }
         else
         {
-            return Ok(response);
+            return Created("", response);
         }
     }
 
     [HttpPut]
+    [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(WeatherResponse))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateOne([FromBody] UpdateWeatherForecast request)
     {
         WeatherResponse? response = await mediator.Send(request);
@@ -79,11 +87,13 @@ public class WeatherForecastController : ControllerBase
         }
         else
         {
-            return Ok(response);
+            return Accepted(response);
         }
     }
 
     [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(WeatherResponse))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteOne([FromBody] DeleteWeatherForecast request)
     {
         WeatherResponse? response = await mediator.Send(request);
@@ -94,7 +104,7 @@ public class WeatherForecastController : ControllerBase
         }
         else
         {
-            return Ok(response);
+            return Accepted(response);
         }
     }
 }
